@@ -1,0 +1,25 @@
+{
+  "baseline": {
+    "false_adoption": true,
+    "new_file_covered": false,
+    "orphan_reference": false,
+    "provenance": false,
+    "rollback": false
+  },
+  "method": {
+    "change_types_declared": [
+      "ADD",
+      "DELETE",
+      "MODIFY",
+      "RENAME-MOVE"
+    ],
+    "false_adoption": true,
+    "new_file_covered": true,
+    "orphan_reference": true,
+    "provenance": true,
+    "rejected_as_link_only": true,
+    "rollback": true
+  },
+  "passed": true,
+  "test": "H-001"
+}

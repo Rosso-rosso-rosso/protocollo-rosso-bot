@@ -1,0 +1,19 @@
+{
+  "accepted": 500,
+  "duplicates": 1000,
+  "elapsed_ms": 28.701,
+  "events": 1000,
+  "events_per_second": 34841.41,
+  "health": {
+    "canonical": 500,
+    "links": 500,
+    "nodes": [
+      "node-a",
+      "node-b"
+    ],
+    "rejections": 0,
+    "seen": 1000
+  },
+  "linked": 500,
+  "rejected": 0
+}

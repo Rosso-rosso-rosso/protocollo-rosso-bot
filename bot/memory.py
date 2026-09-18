@@ -18,6 +18,8 @@ from bot.config import BASE_DIR
 
 MEMORY_PATH = Path(os.getenv("R3_MEMORY_PATH", str(BASE_DIR / "r3-memory.jsonl")))
 NODE_ID = os.getenv("R3_NODE_ID", "protocollo-rosso-bot")
+REPOSITORY = os.getenv("R3_REPOSITORY", "Rosso-rosso-rosso/protocollo-rosso-bot")
+BRANCH = os.getenv("R3_BRANCH", "feat/efficient-routing-cache")
 _LOCK = threading.Lock()
 
 
@@ -45,6 +47,8 @@ def append_event(kind: str, payload: dict[str, Any], *, source_project: str, per
     event = {
         "ts": time.time_ns(),
         "node": NODE_ID,
+        "repository": REPOSITORY,
+        "branch": BRANCH,
         "kind": kind,
         "source_project": source_project,
         "permission_scope": permission_scope,
@@ -72,6 +76,8 @@ def remember_classification(run_id: str, text: str, layer: str) -> dict[str, Any
 def memory_health() -> dict[str, Any]:
     return {
         "node": NODE_ID,
+        "repository": REPOSITORY,
+        "branch": BRANCH,
         "path": str(MEMORY_PATH),
         "exists": MEMORY_PATH.exists(),
         "chain_head": _last_hash(),
