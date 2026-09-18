@@ -16,6 +16,8 @@ import uuid
 
 from bot import config
 from bot.epistemic import classify, classify_cache_info
+from bot.identity import manifest
+from bot.memory import memory_health, remember_classification
 
 ENGINE = "protocollo-nucleo"
 VERSION = "0.3.0"
@@ -37,6 +39,7 @@ def health() -> dict:
         "h2_persone_reali_raggiunte": 0,
         "ponte_sdq1": "configurato" if ponte_configurato() else "assente",
         "classify_cache": {"hits": cache.hits, "misses": cache.misses, "size": cache.currsize},
+        "memory": memory_health(),
         "nota": "Non è SDQ-1 a sei agenti. È il classificatore del Protocollo, sullo stesso processo del bot.",
     }
 
@@ -70,6 +73,7 @@ def _locale(corpo: str, layer: str, rid: str, t0: float, extra: dict | None = No
         "durata_ms": int((time.time() - t0) * 1000),
         "provider": [ENGINE],
         "agenti": 0,
+        "identity": manifest()["identity"]["name"],
     }
     if extra:
         out.update(extra)
@@ -104,4 +108,6 @@ def ask(testo: str, run_id: str | None = None) -> dict:
         return out
 
     corpo, layer = _nucleo(testo)
+    if config.R3_MEMORY_ENABLED:
+        remember_classification(rid, testo, layer)
     return _locale(corpo, layer, rid, t0)
