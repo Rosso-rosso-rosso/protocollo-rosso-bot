@@ -43,3 +43,18 @@ def test_plan_cache_is_link_only(tmp_path, monkeypatch):
     plan = memory.load_linked_plan("intent", source_project="p")
     assert plan["decision"] == "LINK-ONLY"
     assert memory.load_linked_plan("intent", source_project="other") is None
+
+
+def test_concurrent_append_has_single_linear_chain(tmp_path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    from bot import memory
+
+    path = tmp_path / "concurrent.jsonl"
+    monkeypatch.setattr(memory, "MEMORY_PATH", path)
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(pool.map(lambda i: memory.append_event("concurrent", {"i": i}, source_project="p"), range(40)))
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    assert len(rows) == 40
+    assert len({row["event_hash"] for row in rows}) == 40
+    assert rows[0]["prev_hash"] == "GENESIS"
+    assert {row["prev_hash"] for row in rows[1:]} == {rows[i]["event_hash"] for i in range(39)}

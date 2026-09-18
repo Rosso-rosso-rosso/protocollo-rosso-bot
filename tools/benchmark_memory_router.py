@@ -30,5 +30,5 @@ for n in range(1000):
     elif decision == "REJECT": rejected += 1
     duplicate += router.route(item).decision == "DUPLICATE"
 elapsed = time.perf_counter() - start
-result = {"events": 1000, "accepted": accepted, "linked": linked, "rejected": rejected, "duplicates": duplicate, "elapsed_ms": round(elapsed * 1000, 3), "events_per_second": round(1000 / elapsed, 2), "health": router.health()}
+result = {"benchmark": "IN_MEMORY_ROUTER_MICROBENCHMARK", "events": 1000, "accepted": accepted, "linked": linked, "rejected": rejected, "duplicates": duplicate, "elapsed_ms": round(elapsed * 1000, 3), "events_per_second": round(1000 / elapsed, 2), "note": "in-memory only; not a distributed durability or network capacity claim", "health": router.health()}
 print(json.dumps(result, indent=2, sort_keys=True))
