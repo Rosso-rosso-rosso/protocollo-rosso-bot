@@ -10,6 +10,7 @@ con l'Ologramma Totale — aperto, vivo, non chiuso in certezze premature.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 
 from bot.states import SanctuaryState
 
@@ -25,7 +26,7 @@ LAYERS = (
 )
 
 P6_UNKNOWN = "non so ancora come potrebbe cadere"
-P6_THESIS = "cade se si costruisce un esperimento che il \u00abgià\u00bb non può assorbire — e oggi non so quale sia"
+P6_THESIS = "cade se si costruisce un esperimento che il «già» non può assorbire — e oggi non so quale sia"
 
 END = "END"
 STAY = "STAY"
@@ -71,7 +72,6 @@ CLOSURE_MARKERS = (
     "non cambierà",
     "non cambia niente",
     "sono bloccato",
-    "mi arrendo",
     "non è reale",
     "è tutto falso",
     "non credo",
@@ -92,10 +92,14 @@ def _has(lower: str, words: tuple[str, ...]) -> bool:
     return any(w in lower for w in words)
 
 
-def classify(text: str) -> Label:
-    raw = (text or "").strip()
-    lower = raw.lower()
-    if not raw:
+def _norm(text: str) -> str:
+    """Canonicalizza input per evitare lavoro duplicato e rendere la cache utile."""
+    return " ".join((text or "").strip().lower().split())
+
+
+@lru_cache(maxsize=1024)
+def _classify_normalized(lower: str) -> Label:
+    if not lower:
         return Label("UNKNOWN", "Testo vuoto. Resta UNKNOWN.", P6_UNKNOWN)
     if _has(lower, THESIS_MARKERS):
         return Label(
@@ -153,14 +157,19 @@ def classify(text: str) -> Label:
     return Label("UNKNOWN", "Non classificabile con sicurezza da qui. Trattala come IPOTESI.", P6_UNKNOWN)
 
 
+def classify(text: str) -> Label:
+    """Classifica in modo puro, con cache bounded e senza cambiare il contratto."""
+    return _classify_normalized(_norm(text))
+
+
+def classify_cache_info():
+    """Metriche locali per verificare se la velocizzazione funziona."""
+    return _classify_normalized.cache_info()
+
+
 def is_closure(text: str) -> bool:
     """Ritorna True se il testo esprime un dubbio limitante o una chiusura."""
-    lower = (text or "").lower()
-    return _has(lower, CLOSURE_MARKERS)
-
-
-def _norm(text: str) -> str:
-    return " ".join((text or "").strip().lower().split())
+    return _has(_norm(text), CLOSURE_MARKERS)
 
 
 def sanctuary_advance(state: int, text: str) -> tuple[object, bool]:
