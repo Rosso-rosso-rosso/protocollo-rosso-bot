@@ -27,6 +27,7 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 # Piena = /ask inoltra al motore esterno; se il ponte cade, lo dichiara.
 SDQ1_URL = os.getenv("SDQ1_URL", "").strip()
 SDQ1_TIMEOUT = float(os.getenv("SDQ1_TIMEOUT", "8"))
+MAX_INPUT_CHARS = int(os.getenv("MAX_INPUT_CHARS", "4000"))
 
 
 def require_token() -> str:

@@ -4,10 +4,7 @@ Non è la pipeline a sei agenti. Non c'è VSS. Non c'è H2.
 Fa una cosa vera: etichetta un testo e risponde senza chiudere.
 
 Ponte: se SDQ1_URL è configurata, /ask inoltra il testo al motore
-esterno (i sei agenti, quando esistono). Se il ponte cade — timeout,
-motore spento, risposta illeggibile — risponde il nucleo locale
-e lo dichiara nella risposta. Mai spacciare il nucleo per i sei,
-mai spacciare un ponte caduto per un motore vivo.
+esterno. Se il ponte cade, risponde il nucleo locale e lo dichiara.
 """
 
 from __future__ import annotations
@@ -18,10 +15,10 @@ import urllib.request
 import uuid
 
 from bot import config
-from bot.epistemic import classify
+from bot.epistemic import classify, classify_cache_info
 
 ENGINE = "protocollo-nucleo"
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 
 
 def ponte_configurato() -> bool:
@@ -29,6 +26,7 @@ def ponte_configurato() -> bool:
 
 
 def health() -> dict:
+    cache = classify_cache_info()
     return {
         "ok": True,
         "engine": ENGINE,
@@ -38,6 +36,7 @@ def health() -> dict:
         "memoria_size": 0,
         "h2_persone_reali_raggiunte": 0,
         "ponte_sdq1": "configurato" if ponte_configurato() else "assente",
+        "classify_cache": {"hits": cache.hits, "misses": cache.misses, "size": cache.currsize},
         "nota": "Non è SDQ-1 a sei agenti. È il classificatore del Protocollo, sullo stesso processo del bot.",
     }
 
@@ -80,10 +79,13 @@ def _locale(corpo: str, layer: str, rid: str, t0: float, extra: dict | None = No
 def ask(testo: str, run_id: str | None = None) -> dict:
     t0 = time.time()
     rid = run_id or uuid.uuid4().hex[:12]
+    testo = (testo or "").strip()
+    # Evita prompt enormi e latenza inutile; il limite è esplicito e configurabile.
+    testo = testo[: config.MAX_INPUT_CHARS]
 
     if ponte_configurato():
         try:
-            out = _chiedi_motore_esterno(testo or "", rid)
+            out = _chiedi_motore_esterno(testo, rid)
         except Exception as exc:
             corpo, layer = _nucleo(testo)
             corpo = (
