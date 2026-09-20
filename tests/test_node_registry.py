@@ -6,11 +6,11 @@ from bot.node_registry import InMemoryNodeRegistry, KeyConflict, UnknownKey, Inv
 
 class Cursor:
     rowcount=1
-    def __init__(self, row=("ACTIVE",)): self.row=row; self.sql=[]
+    def __init__(self, row=("ACTIVE",), rows=None): self.row=row; self.rows=list(rows or []); self.sql=[]
     def __enter__(self): return self
     def __exit__(self,*a): return False
     def execute(self,q,p=()): self.sql.append((q,p))
-    def fetchone(self): return self.row
+    def fetchone(self): return self.rows.pop(0) if self.rows else self.row
     def fetchall(self): return []
 class Connection:
     def __init__(self,cursor=None): self.cursor_obj=cursor or Cursor(); self.commits=0
@@ -50,7 +50,7 @@ def test_postgres_candidate_rejects_conflict_and_uses_lock():
 
 def test_registry_register_rotate_revoke_uses_transactional_calls():
     from bot.node_registry import PostgreSQLNodeRegistry
-    conn=Connection(); registry=PostgreSQLNodeRegistry(conn); registry.register("n","k1","pub1",{"PROJECT"},{"CAN_BROADCAST"}); registry.rotate("n","k1","k2","pub2"); registry.revoke("n","k1")
+    conn=Connection(Cursor(rows=[None, ("ACTIVE",)])); registry=PostgreSQLNodeRegistry(conn); registry.register("n","k1","pub1",{"PROJECT"},{"CAN_BROADCAST"}); registry.rotate("n","k1","k2","pub2"); registry.revoke("n","k1")
     assert conn.commits==3; statements=" ".join(sql for sql,_ in conn.cursor_obj.sql); assert "FOR UPDATE" in statements and "REVOKED" in statements
 
 def test_schema_enforces_single_active_key_per_node():
