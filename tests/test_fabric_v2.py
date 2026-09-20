@@ -26,7 +26,7 @@ def test_rotation_revocation_preserves_history():
     reg=NodeRegistry(); old=NodeIdentity("a",key_id="key1"); sender=FabricNode(old,reg,scopes={"PROJECT"}); receiver=FabricNode(NodeIdentity("b"),reg,scopes={"PROJECT"})
     historical=sender.envelope(destination="b",message_type="test",payload={},permission_scope="PROJECT",sequence=1)
     assert receiver.receive(historical)[0]=="ACCEPT"
-    new=NodeIdentity("a",key_id="key2"); reg.rotate("a","key2",new.public_key); sender.identity=new
+    new=NodeIdentity("a",key_id="key2"); reg.rotate("a","key1","key2",new.public_key); sender.identity=new
     current=sender.envelope(destination="b",message_type="test",payload={},permission_scope="PROJECT",sequence=2); assert receiver.receive(current)[0]=="ACCEPT"
     reg.revoke("a","key1"); assert receiver.receive(historical)[0]=="REJECT_REPLAY"
     old_env=old.sign
