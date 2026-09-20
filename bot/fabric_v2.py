@@ -67,7 +67,7 @@ class FabricNode:
     def __init__(self, identity: NodeIdentity, registry: NodeRegistry, *, fabric_id: str = "r3-interna-rossorosso", scopes: set[str] | None = None, capabilities: set[str] | None = None, router: MemoryFabricRouter | None = None):
         self.identity, self.registry, self.fabric_id = identity, registry, fabric_id
         self.scopes, self.capabilities, self.router = scopes or {"LOCAL"}, capabilities or set(), router
-        self.used_messages: set[str] = set(); self.used_sequences: set[int] = set()
+        self.used_messages: set[str] = set(); self.used_sequences: set[tuple[str, int]] = set()
         registry.register(identity.node_id, identity.key_id, identity.public_key, self.scopes, self.capabilities)
     def envelope(self, *, destination: str, message_type: str, payload: dict[str, Any], permission_scope: str, sequence: int, expires_in: int = 300) -> dict[str, Any]:
         now = time.time(); message_id = secrets.token_hex(16); payload_hash = digest(payload)
@@ -77,7 +77,7 @@ class FabricNode:
         required = {"fabric_id","schema_version","message_id","node_id","key_id","source_project","destination","message_type","permission_scope","created_at","expires_at","sequence","payload","payload_hash","signature_algorithm","signature"}
         if not required <= envelope.keys(): return "REJECT_SCHEMA", None
         if envelope["fabric_id"] != self.fabric_id or envelope["schema_version"] != "2": return "REJECT_FABRIC_OR_SCHEMA", None
-        if envelope["message_id"] in self.used_messages or envelope["sequence"] in self.used_sequences: return "REJECT_REPLAY", None
+        if envelope["message_id"] in self.used_messages or (envelope["node_id"], envelope["sequence"]) in self.used_sequences: return "REJECT_REPLAY", None
         if envelope["expires_at"] < time.time(): return "REJECT_EXPIRED", None
         if envelope["destination"] not in {self.identity.node_id, "BROADCAST"}: return "REJECT_DESTINATION", None
         sender = self.registry.nodes.get(envelope["node_id"])
@@ -91,7 +91,7 @@ class FabricNode:
         signed = {k:v for k,v in envelope.items() if k != "signature"}
         try: Ed25519PublicKey.from_public_bytes(unb64(key.public_key)).verify(unb64(envelope["signature"]), canon(signed))
         except Exception: return "REJECT_SIGNATURE", None
-        self.used_messages.add(envelope["message_id"]); self.used_sequences.add(envelope["sequence"])
+        self.used_messages.add(envelope["message_id"]); self.used_sequences.add((envelope["node_id"], envelope["sequence"]))
         if self.router and envelope["message_type"] == "memory_event":
             routed = self.router.route(envelope["payload"]["event"])
             return routed.decision, routed

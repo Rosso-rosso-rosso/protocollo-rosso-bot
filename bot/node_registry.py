@@ -42,8 +42,11 @@ class PostgreSQLNodeRegistry(NodeRegistryStore):
         with self.connection:
             with self.connection.cursor() as cur:
                 cur.execute("SELECT status FROM r3_node_keys WHERE node_id=%s AND key_id=%s FOR UPDATE", (node_id,old_key_id))
-                if cur.fetchone() is None: raise KeyError("unknown old key")
-                cur.execute("UPDATE r3_node_keys SET status='ROTATING' WHERE node_id=%s AND key_id=%s", (node_id,old_key_id))
+                row = cur.fetchone()
+                if row is None: raise KeyError("unknown old key")
+                if row[0] != "ACTIVE": raise ValueError("old key is not ACTIVE")
+                cur.execute("UPDATE r3_node_keys SET status='ROTATING' WHERE node_id=%s AND key_id=%s AND status='ACTIVE'", (node_id,old_key_id))
+                if getattr(cur, "rowcount", 1) == 0: raise ValueError("old key is not ACTIVE")
                 cur.execute("INSERT INTO r3_node_keys(node_id,key_id,public_key,status) VALUES(%s,%s,%s,'ACTIVE')", (node_id,new_key_id,new_public_key))
     def revoke(self, node_id, key_id):
         with self.connection:

@@ -74,3 +74,17 @@ def test_fabric_and_signature_rejections():
     assert receiver.receive(bad_schema)[0] == "REJECT_FABRIC_OR_SCHEMA"
     bad_sig = sender.envelope(destination="b", message_type="test", payload={}, permission_scope="PROJECT", sequence=3); bad_sig["signature"] = "invalid"
     assert receiver.receive(bad_sig)[0] == "REJECT_SIGNATURE"
+
+
+def test_sender_scoped_sequence_replay():
+    from bot.fabric_v2 import FabricNode, NodeIdentity, NodeRegistry
+
+    reg = NodeRegistry()
+    node_a = FabricNode(NodeIdentity("A"), reg, scopes={"PROJECT"})
+    node_c = FabricNode(NodeIdentity("C"), reg, scopes={"PROJECT"})
+    receiver = FabricNode(NodeIdentity("b"), reg, scopes={"PROJECT"})
+    env_a = node_a.envelope(destination="b", message_type="test", payload={"from": "A"}, permission_scope="PROJECT", sequence=1)
+    env_c = node_c.envelope(destination="b", message_type="test", payload={"from": "C"}, permission_scope="PROJECT", sequence=1)
+    assert receiver.receive(env_a)[0] == "ACCEPT"
+    assert receiver.receive(env_c)[0] == "ACCEPT"
+    assert receiver.receive(env_a)[0] == "REJECT_REPLAY"

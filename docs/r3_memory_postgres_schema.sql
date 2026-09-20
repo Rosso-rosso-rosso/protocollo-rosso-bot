@@ -49,3 +49,6 @@ CREATE TABLE IF NOT EXISTS r3_node_capabilities (
   PRIMARY KEY (node_id, capability)
 );
 CREATE INDEX IF NOT EXISTS r3_node_keys_status_idx ON r3_node_keys(node_id, status);
+CREATE UNIQUE INDEX IF NOT EXISTS r3_node_keys_one_active_per_node
+  ON r3_node_keys(node_id)
+  WHERE status='ACTIVE';
