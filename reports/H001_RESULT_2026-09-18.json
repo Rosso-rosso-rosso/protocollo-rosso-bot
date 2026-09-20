@@ -1,0 +1,27 @@
+{
+  "baseline": {
+    "false_adoption_present": true,
+    "false_adoption_prevented": false,
+    "new_file_covered": false,
+    "orphan_reference_present": false,
+    "provenance_recorded": false,
+    "rollback_verified": false
+  },
+  "method": {
+    "change_types_declared": [
+      "ADD",
+      "MODIFY",
+      "DELETE",
+      "RENAME-MOVE"
+    ],
+    "false_adoption_present": false,
+    "false_adoption_prevented": true,
+    "new_file_covered": true,
+    "orphan_reference_present": false,
+    "provenance_recorded": true,
+    "rejected_as_link_only": true,
+    "rollback_verified": true
+  },
+  "passed": true,
+  "test": "H-001"
+}

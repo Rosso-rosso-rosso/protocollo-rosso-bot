@@ -27,6 +27,9 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 # Piena = /ask inoltra al motore esterno; se il ponte cade, lo dichiara.
 SDQ1_URL = os.getenv("SDQ1_URL", "").strip()
 SDQ1_TIMEOUT = float(os.getenv("SDQ1_TIMEOUT", "8"))
+MAX_INPUT_CHARS = int(os.getenv("MAX_INPUT_CHARS", "4000"))
+R3_MEMORY_ENABLED = os.getenv("R3_MEMORY_ENABLED", "1").strip().lower() not in {"0", "false", "no"}
+R3_NODE_ID = os.getenv("R3_NODE_ID", "protocollo-rosso-bot").strip() or "protocollo-rosso-bot"
 
 
 def require_token() -> str:

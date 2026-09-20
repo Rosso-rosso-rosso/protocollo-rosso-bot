@@ -33,6 +33,7 @@ from bot.scacchiera_flow import (
     scacchiera_command_handlers,
 )
 from bot import sdq1
+from bot.identity import manifest
 from bot.terzo import build_terzo_conversations
 
 logging.basicConfig(
@@ -66,6 +67,10 @@ class _Health(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         path = (self.path or "/").split("?", 1)[0]
+        if path in ("/identity", "/r3/identity"):
+            payload = json.dumps(manifest(), ensure_ascii=False).encode("utf-8")
+            self._send(200, payload, "application/json; charset=utf-8")
+            return
         if path in ("/sdq1/health", "/ask/health"):
             payload = json.dumps(sdq1.health(), ensure_ascii=False).encode("utf-8")
             self._send(200, payload, "application/json; charset=utf-8")

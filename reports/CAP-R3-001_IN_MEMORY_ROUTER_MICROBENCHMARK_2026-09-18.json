@@ -1,0 +1,20 @@
+{
+  "accepted": 500,
+  "benchmark": "IN_MEMORY_ROUTER_MICROBENCHMARK",
+  "duplicates": 1000,
+  "elapsed_ms": 34.837,
+  "events": 1000,
+  "events_per_second": 28704.71,
+  "health": {
+    "events": 1000,
+    "links": 500,
+    "nodes": [
+      "node-a",
+      "node-b"
+    ],
+    "rejections": 0
+  },
+  "linked": 500,
+  "note": "in-memory only; not a distributed durability or network capacity claim",
+  "rejected": 0
+}
